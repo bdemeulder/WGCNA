@@ -1,0 +1,29 @@
+Package: WGCNAapp
+Type: Package
+Title: Shiny App Wrapper of the 'WGCNA' Package
+Version: 1.0
+Date: 2018-03-01
+Authors@R: c(person("Diane", "Lefaudeux", role = "aut", 
+                    email = "dlefaudeux@eisbm.org"),
+             person("Bertrand", "De Meulder", role = c("aut","cre"),
+                    email = "bdemeulder@eisbm.org")
+            )
+Author: Diane Lefaudeux [aut],
+  Bertrand De Meulder [aut, cre]
+Maintainer: Bertrand De Meulder <bdemeulder@eisbm.org>
+Description: Shiny App wrapper of the 'WGCNA' package of the main flow analysis
+  for detection of genes modules and relating them to clinical traits developed for the eTRIKS project.
+License: GPL (>= 2)
+Depends:
+  R (>= 3.2.0),
+  shiny,
+  WGCNA
+Imports:
+  DT, 
+  gplots,
+  impute,
+  networkD3,
+  rmarkdown,
+  stringr,
+  plotly
+RoxygenNote: 6.0.1
