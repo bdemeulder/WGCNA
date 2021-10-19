@@ -1,0 +1,257 @@
+---
+title: "WGCNAapp report"
+output: html_document
+---
+
+<style type="text/css">
+  h1.title {
+    text-align: center;
+  }
+</style>
+      
+--------------------
+
+<p style="float:left;width:50%;">[![etriks](etriks.png){ width=45% }](http://www.etriks.org)
+[![EISBM](EISBM.png){ width=45% }](http://www.eisbm.org) </p>
+
+<p style="display:inline;"> This report is generated from the WGCNAapp developped by the [European Institute for Systems Biology and Medicine](http://www.eisbm.org/) for the [eTRIKS](http://www.etriks.org) project. 
+Contact <bdemeulder@eisbm.org> for any questions.</p>
+<br>
+
+**Disclaimer:** This application is offered to the public as a freely available resource, for non-commercial research use. 
+Some aspects of this experimental module may still be under development, and there are no warranties about the completeness, reliability, accuracy, and security of this software.
+
+-------------------
+
+# Module Trait Relationship
+
+## Eigengene Trait Analysis
+```{r module_trait_heatmap, echo = FALSE, dev = 'svg', fig.width = 27, fig.asp = 0.5, out.width = '100%'}
+tmp <- tryCatch(r_data$moduleTrait, error=function(e){NULL})
+if(!is.null(tmp)){
+  par(mar = c(8, 7, 2, 0))
+  # set text size depending on the number of clinical trait and modules
+  cex.text = min(min(21 / length(r_data$moduleTrait$MEs), 29 / length(r_data$data$datTraits_num)), 2)
+  labeledHeatmap(
+    Matrix = r_data$moduleTrait$moduleTraitCor,
+    xLabels = colnames(r_data$data$datTraits)[r_data$data$datTraits_num],
+    yLabels = names(r_data$moduleTrait$MEs),
+    ySymbols = names(r_data$moduleTrait$MEs),
+    colorLabels = FALSE,
+    colors = gplots::bluered(50),
+    textMatrix = r_data$moduleTrait$textMatrix,
+    setStdMargins = FALSE,
+    cex.text = cex.text, 
+    cex.lab = cex.text, 
+    cex.main = 2,
+    zlim = c(-1, 1),
+    main = paste("Module-trait relationships"),
+    xColorOffset = 0.01, 
+    yColorWidth = 0.01, 
+    yColorOffset = 0)
+}
+```
+
+## Gene - Trait
+You choose the `r input$module_interest` module and the `r input$trait_interest`  clinical trait.
+ 
+```{r module_eigengene by sample, echo = FALSE, fig.asp = 1, out.width = '100%'}
+# Render eigengene expression by sample
+tmp <- tryCatch(r_data$color_mes, error = function(e){NULL})
+if(!is.null(tmp)){
+  p <- plot_ly(x = row.names(r_data$data$datExpr),
+               y = r_data$color_mes$MEs[, paste("ME", input$module_interest, sep = "")],
+               type = "bar",
+               marker = list(color = gplots::col2hex(input$module_interest),
+                             line = list(width = 1)))
+  p <- p %>% layout(title = "Module Eigengene Expression by Sample",
+                    xaxis = list(title = "Array samples", showticklabels = FALSE),
+                    yaxis = list(title = "Eigengene Expression"))
+
+  p
+}
+```
+
+```{r GS_across_module, echo = FALSE, fig.asp = 1, out.width = '100%'}
+# Render boxplot of significance for specific trait across modules
+tmp <- tryCatch(r_data$gsMM, error = function(e){NULL})
+if(!is.null(tmp)){
+  col <- unique(r_data$color_mes$color)[1]
+  yval <- function(col){
+    abs(r_data$gsMM$geneTraitSignificance)[r_data$color_mes$color == col, paste0("GS.", input$trait_interest)]
+  }
+
+  # initialize plot
+  p <- plot_ly()
+  # make a boxplot for each module/color
+  for (col in unique(r_data$color_mes$color)[1:length(unique(r_data$color_mes$color))]){
+    # add boxplot to plot
+    p <- add_trace(p = p,
+                   y = yval(col),
+                   type = "box",
+                   name = col,
+                   fillcolor = gplots::col2hex(col),
+                   evaluate = TRUE,
+                   hoverinfo = "none",
+                   line = list(color = "black", width = 1),
+                   marker = list(color = gplots::col2hex(col), line = list(color = "black", width = 1)))
+    # add point at the median to show number of gene in each module
+    p <- add_trace(p = p,
+                   x0 = col,
+                   name = col,
+                   hoverinfo = "text",
+                   text = paste("Number: ", sum(r_data$color_mes$color == col)),
+                   y = median(yval(col)),
+                   type = "scatter",
+                   mode = "markers",
+                   legendgroup = col,
+                   evaluate = TRUE,
+                   showlegend = FALSE,
+                   marker = list(color = gplots::col2hex(col), opacity = 0))
+  }
+
+  # layout the plot
+  p <- p %>% layout(title = "Gene Significance Across Modules",
+                    xaxis = list(title = "", showticklabels = TRUE, titlefont = list(size = 1)),
+                    yaxis = list(title = "Gene Significance"),
+                    showlegend = FALSE,
+                    margin = list(b = 120))
+
+  p
+}
+```
+
+```{r MEvsTrait, echo = FALSE, fig.asp = 1, out.width = '100%'}
+# Render scatter plot of module eigengene vs clinical trait
+tmp <- tryCatch(r_data$moduleTrait, error = function(e){NULL})
+if(!is.null(tmp)){
+  dat <- data.frame(y = r_data$color_mes$MEs[, paste0("ME", input$module_interest)],
+                    x = r_data$data$datTraits[, input$trait_interest])
+
+  p <- plot_ly()
+  p <- p %>% add_markers(x = ~dat$x,
+               y = ~dat$y,
+               marker = list(color = input$module_interest, line = list(width = 1)),
+               hoverinfo = "text",
+               text = row.names(r_data$data$datTraits),
+               showlegend = FALSE)
+
+  # Calculate linear model and correltion
+  m <- lm(y ~ x, dat)
+  corm <- cor(dat$x, dat$y, use = "p")
+
+  # Add linear model line
+  p <- p %>% add_lines(y = ~predict(m),
+                       x = ~dat[as.numeric(names(predict(m))), 'x'],
+                       showlegend = FALSE,
+                       hoverinfo = "text",
+                       text = paste0("R: ", signif(corm, 2),
+                                    "\nR<sup>2</sup>: ", signif(summary(m)$r.squared, 2),
+                                    "\nP-val: ", signif(summary(m)$coefficients["x", 4], 2)))
+  # Layout plot
+  p <- p %>% layout(title = "Module eigengene vs. clinical trait",
+                  xaxis = list(title = input$trait_interest),
+                  yaxis = list(title = paste("Module", input$module_interest, "eigengene", sep = " ")))
+
+  p
+}
+```
+
+```{r MMvsGS, echo = FALSE, fig.asp = 1, out.width = '100%'}
+# Render module membership versus gene significance
+tmp <- tryCatch(r_data$gsMM, error = function(e){NULL})
+
+if(!is.null(tmp)){
+  dat <- data.frame(y = abs(r_data$gsMM$geneTraitSignificance[(r_data$color_mes$color == input$module_interest), paste0("GS.",input$trait_interest)]),
+                    x = abs(r_data$gsMM$geneModuleMembership[(r_data$color_mes$color == input$module_interest), match(input$module_interest, r_data$gsMM$modNames)]),
+                    row.names = row.names(r_data$gsMM$geneModuleMembership)[(r_data$color_mes$color == input$module_interest)])
+
+p <- plot_ly()
+  p <- p %>% add_markers(x = ~dat$x,
+                       y = ~dat$y,
+                       marker = list(color = input$module_interest, line = list(color = "black", width = 1)),
+                       showlegend = FALSE,
+                       hoverinfo = "text",
+                       text = paste0(row.names(dat),
+                          "\nMM: ", signif(dat$x, 2),
+                          "\nGS: ", signif(dat$y, 2)))
+  # Calculate linear model and correlation
+  m <- lm(y ~ x, data = dat)
+  corm <- cor(dat$x, dat$y, use="p")
+  
+  # Add linear model line
+  p <- p %>% add_lines(y = ~predict(m),
+                       x = ~dat[names(predict(m)),'x'],
+                       showlegend = FALSE,
+                       hoverinfo = "text",
+                       text = paste0("R: ", signif(corm,2),
+                                     "\nR<sup>2</sup>: ", signif(summary(m)$r.squared, 2),
+                                     "\nP-val: ", signif(summary(m)$coefficients["x", 4], 2))
+                      )
+  # Layout the plot
+  p <- p %>% layout(xaxis = list(title = paste("Module Membership in", input$module_interest, "module")),
+                    yaxis = list(title = paste("Gene significance for", input$trait_interest)),
+                    title = paste("Module membership vs. gene significance\n"))
+
+  p
+}
+```
+
+```{r table_genes, fig.asp = 1, echo = FALSE}
+# render of gene significance and membership
+tmp <- tryCatch(r_data$gsMM, error = function(e){NULL})
+
+if(!is.null(tmp)){
+  xs <- r_data$gsMM$geneModuleMembership[(r_data$color_mes$color == input$module_interest), match(input$module_interest, r_data$gsMM$modNames)]
+  ys <- r_data$gsMM$geneTraitSignificance[(r_data$color_mes$color == input$module_interest), paste0("GS.", input$trait_interest)]
+      
+  genes_table <- data.frame('Feature' = colnames(r_data$data$datExpr)[(r_data$color_mes$color == input$module_interest)],
+                            'Module' = r_data$color_mes$color[r_data$color_mes$color == input$module_interest],
+                            'Module Membership' = xs, 
+                            'Module Membership P-value' = r_data$gsMM$MMPvalue[(r_data$color_mes$color == input$module_interest), match(input$module_interest, r_data$gsMM$modNames)],
+                            'Correlation with Trait' = ys,
+                            'Correlation with Trait P-value' = r_data$gsMM$GSPvalue[(r_data$color_mes$color == input$module_interest), paste0("p.GS.", input$trait_interest)])
+   
+DT::datatable(genes_table, 
+              rownames = FALSE, 
+              extensions = list(ColReorder = NULL, FixedColumns = list(leftColumns = 1)),
+              options = list(dom = 'BR<"clear">lftip', 
+                             colVis = list(buttonText = "Show/Hide"), 
+                             buttons = c('colvis'), 
+                             scrollX = TRUE, 
+                             scrollXInner = "100%", 
+                             scrollCollapse = FALSE, 
+                             autoWidth = FALSE))
+}
+```
+
+`r if('network_to_show' %in% names(r_data)){if(!is.null(r_data$network_to_show)){paste0("<h1>Network</h1><p>You choose modules: ", paste0(input$modules_for_network, collapse=", "), ".</p><p>You set the threshold to remove unlink node to: ",  input$link_threshold)}}`
+
+```{r network, echo = FALSE}
+if('network_to_show' %in% names(r_data)){
+  if(!is.null(r_data$network_to_show)){
+    tmp <- tryCatch(r_data$network_to_show$MisLinks,error=function(e){NULL});
+    tmp2 <- tryCatch({r_data$network_to_show$MisNodes}, error=function(e){NULL});
+     
+    net <- tryCatch(expr = {
+      networkD3::forceNetwork(Links = tmp,
+                              Nodes = tmp2,
+                              opacity = 0.8,
+                              Source = "source",
+                              Target = "target",
+                              Value = "value",
+                              NodeID = "name",
+                              Group = "group",
+                              colourScale = networkD3::JS(paste0("d3.scaleOrdinal().range(['", 
+                                                                 paste(gplots::col2hex(unique(tmp2$group)), 
+                                                                       collapse = " ' , ' "), "'])")),
+                              zoom = TRUE,
+                              bounded = FALSE,
+                              linkDistance = networkD3::JS("function(d){return (1-d.value) * 100}"),
+                              linkWidth = networkD3::JS("function(d) { return d.value*3; }"))
+          },
+          error = function(e){NULL})
+      return(net)
+  }
+}
+```

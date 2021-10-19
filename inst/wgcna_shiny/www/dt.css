@@ -1,0 +1,135 @@
+#loading {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  min-height: 100%;
+  background-color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  color: #fff;
+}
+
+#loading-dialog {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  height: 100px;
+  line-height: 100px;
+  width: 300px;
+  margin-top: -50px;
+  margin-left: -150px;
+  z-index: 11;
+  background-color: rgb(170, 170, 170);
+  text-align: center;
+  border-radius: 4px;
+}
+
+#loading-dialog span {
+  display: inline-block;
+  vertical-align: middle;
+  line-height: normal;
+}
+
+.container {
+  padding-right: 15px;
+	padding-left: 15px;
+	margin-right: auto;
+	margin-left: auto;
+  width: 100%
+}
+
+.help {
+  border: 1px dashed black;
+  padding: 19px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+  background-color: rgb(255, 255, 255);
+  text-align: justify;
+}
+
+.nodetext {
+  fill: black;
+}
+
+.circle[style]{
+  stroke: black !important;
+}
+
+.DTTT_container{
+  margin-left: 2em;
+}
+
+.btn-right{
+  position: relative;
+  float: right;
+}
+
+.btn-left{
+  position: relative;
+  float: left;
+}
+
+#networkPlot{
+  border: 1px solid #E3E3E3;
+  border-radius: 4px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.img:not(#waiting_img):not(#header){
+  width: 100%;
+  height: auto;
+}
+
+.arrow-left {
+  width: 30px;
+  height: 30px;
+  background: url("left_arrow.gif") no-repeat;
+  background-size: cover;
+}
+
+.arrow-right {
+  width: 30px;
+  height: 30px;
+  background: url("right_arrow.gif") no-repeat;
+  background-size: cover;
+}
+
+.main {
+  width: 66.67%;
+  float: left;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+.main_full {
+  width: calc(100% - 45px);
+  float: left;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+#dataset div:nth-child(2), .multicol_radio {
+  column-count: 2;
+  column-fill: auto;
+  width: fit-content;
+}
+
+#dataset .shiny-options-group {
+  margin-top: 0;
+}
+
+#dataset .control-label {
+  margin-bottom: 15px;
+}
+
+#dataset .radio+.radio {
+  margin-top: 0;
+}
+#dataset .radio {
+  margin-top: 0;
+  margin-bottom: 5px;
+}

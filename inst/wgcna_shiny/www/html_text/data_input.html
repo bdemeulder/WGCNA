@@ -1,0 +1,64 @@
+<h3 style = "margin-top: 10px">Demo Datasets</h3> 
+<p>The user can choose between a Female Mice Liver transcriptomics dataset 
+(N = 135) or a Male Mice Liver transcriptomics dataset (N = 124), each with 
+3,600 probesets (more details in Ghazalpour <em>et al.</em>, <strong>Integrating 
+Genetic and Network Analysis to Characterise Genes Related to Mouse Weight</strong>, 
+<em>PLoS Genetics</em>, 2006). These two datasets have been used by the authors 
+of the WGCNA method in their tutorials.</p>
+<p>Each dataset comprises two files, one for the transcriptomics expression 
+(in log2 and Z-scored), one for the clinical parameters, each having the samples 
+IDs as first column.</p>
+
+<h3>User datasets</h3>
+<p>Alternatively, the user has the possibility to upload his/her own data to be 
+analysed. The data has to be formatted as text or csv files (.txt or .csv), with 
+samples as rows and features as columns (genes/probesets or clinical traits). 
+The first line of the files must contain the features names and the first 
+column must contain samples IDs. Moreover sample IDs from one file must 
+correspond to those in the other file. Clinical trait data will be 
+automatically subsetted and reordered based on sample IDs from the gene 
+expression data.</p>
+<p>Expression values can be submitted as log2 values or normalised log2 values. 
+The user can perform normalisation of his/her own data by selecting the 
+<strong>Z-score </strong> radio button. The user can impute missing data using K 
+Nearest Neighbors (KNN) method (with 10 neighbours) in the expression matrix by 
+selecting the <strong>impute</strong> radio button. This is however not mandatory. 
+Note that features and/or samples with more than 50% missing values will be 
+automatically removed from the analysis.</p>
+<p>Clinical data are only considered when they are numerical. Qualitative data have 
+to be transformed into numerical ones. The user can transform qualitative data 
+by selecting the <strong>binary</strong> radio button. The user has to keep in mind 
+that few values in a clinical variable will yield a lower quality of the 
+correlation estimation with the gene modules for this variable.</p>
+<p><img src = '../attention.png' alt = "warning" style = "width: 1em; vertical-align: baseline"> 
+The memory and time needed for the analysis grow exponentially with the number 
+of features of the expression matrix. Analysing 10,000 features will require 
+around 8Gb of memory and 7 minutes to compute on an Intel Core i7 computer; 
+doubling the number of features (20,000) will quadruple the memory (~24Gb) and 
+multiply by 8 the time (~1h) requirement.
+</p>
+
+<h3>Tables</h3> 
+<p>The user can click on 'Data Tables of Input Data’ to show the tables of the 
+input data. The tables of ‘Gene Expression’ and ‘Clinical Traits’ show the source data 
+matrices. The user can choose to show more entries and search for a specific 
+subject. 
+</p> 
+
+<h3>Visualisation</h3> 
+<p>The "Sample dendrogram" shows the dendrogram computed on the distances 
+(Euclidean metric) between the samples based on the expression data. Below 
+is shown the clinical traits heatmap. The colours represent the Z-scores of the 
+clinical traits: blue corresponds to low values, white to the means 
+(<em>i.e.</em> 0), red to high values and grey to missing values.</p>
+<p>If there is no missing data in the expression matrix, the three first 
+components of the PCA are shown in a 3D view (this need WebGL enabled on your 
+web browser). The user can colour the plot by any of the clinical trait 
+uploaded.</p>
+<p>The user can then download a HTML report of this whole page by clicking on 
+the <strong>Download Report</strong> button. This report can be opened in any 
+web browser (preferably in chrome, for large files) and interactive functions 
+of the tables and plots are maintained in the report.</p>
+<p> Once the user is happy with the choice of dataset, he/she can proceed by 
+clicking on the <strong>Go to Next Step</strong> button or on the 
+<strong>Network Construction</strong> tab on top of the page.</p>

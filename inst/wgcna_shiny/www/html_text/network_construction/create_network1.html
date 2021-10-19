@@ -1,0 +1,27 @@
+<h3 style = "margin-top: 10px">Compute Network</h3>
+<p> The Network can be constructed either in an automated or manual way 
+(<strong>Automatic</strong> or <strong>Manual</strong> Construction Method 
+respectively).
+</p> 
+<p>If the user chooses to use the <strong>Manual</strong> network computation, 
+he/she will have access to additional parameters for module detection.</p>
+<p>The user can specify the soft power (by default the red value in the 
+previous step) and the <strong>Topology Overlap Matrix</strong> 
+(<strong>TOM</strong>) type (only for unsigned network). The central idea of 
+TOM is to take into account the direct connection strengths as well as 
+connection strengths mediated by shared neighbours.</p>
+<p>TOM type can be:</p>
+<ul>
+    <li> <strong>Unsigned:</strong> consider all links as having the same effect,</li>
+    <li> <strong>Signed:</strong> consider the possibility of negative feedback.</li> 
+</ul>
+<p>Once the parameters are chosen, the user can click on the <strong>Calculate 
+Network</strong> button to compute the network accordingly.</p>
+<p>Resulting modules are then represented by their module eigengenes (virtual 
+genes representing each module). The tree of the module eigengenes ("Clustering 
+of module eigengenes") is found in the first part of the figure under the 
+parameter box. It represents how correlated the module eigengenes are to each 
+other. The second part of the figure ("Cluster dendrogram") represents the 
+dendrogram of the genes, the first band of colors represents the initial 
+modules, and the second band represents the merged modules if any merging 
+happened.</p>

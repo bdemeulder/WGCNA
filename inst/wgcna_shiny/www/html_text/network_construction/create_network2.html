@@ -1,0 +1,32 @@
+<h3>Detect Modules</h3> 
+<p>If the user chooses the <strong>Automatic</strong> construction method, 
+module detection uses default values for the needed parameters.
+</p>
+<p>If the user chooses the <strong>Manual</strong> construction method, he/she 
+will have access to the following parameters:
+</p>
+<ul>
+  <li><strong>Min module size</strong> (by default 30 genes): minimum number 
+  of genes in a module,</li>
+  <li><strong>Max joining height</strong> (by default 0.995): genes above this 
+  threshold in the Cluster Dendrogram are put in the grey module (~garbage 
+  module), </li>
+  <li><strong>Depth of split</strong> (by default 2): depth of branch allowed 
+  for the module detection (from 0 to 4).</li>
+</ul>
+<p>The parameter values will influence the way WGCNA defines the initial set 
+of gene modules. The user can click on the <strong>Define Initial Modules
+</strong> button to launch the computation.
+</p> 
+<p>The modules can then be iteratively merged (by clicking on the <strong>
+Merge Close Module</strong> button) if they are similar enough (<em>i.e.</em> 
+below the merge threshold). The red line in the "Clustering of module eigengenes" 
+plot shows roughly which modules are going to be merged (the grey module is never 
+merged). As the merging works iteratively, decreasing the <strong>Threshold to 
+Merge Modules</strong> between 2 iterations will have no effect.
+</p>
+<p>For the manual computation, the modules are defined initially using the 
+default parameters but their values can be changed and the modules will have 
+to be re-initialised by clicking on the <strong>Define Initial Modules
+</strong> button.
+</p>

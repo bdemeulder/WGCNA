@@ -1,0 +1,153 @@
+---
+title: "WGCNAapp report"
+output: html_document
+---
+
+<style type="text/css">
+  h1.title {
+    text-align: center;
+  }
+</style>
+
+--------------------
+
+<p style="float:left;width:50%;">[![etriks](etriks.png){ width=45% }](http://www.etriks.org)
+[![EISBM](EISBM.png){ width=45% }](http://www.eisbm.org) </p>
+
+<p style="display:inline;"> This report is generated from the WGCNAapp developped by the [European Institute for Systems Biology and Medicine](http://www.eisbm.org/) for the [eTRIKS](http://www.etriks.org) project. 
+Contact <bdemeulder@eisbm.org> for any questions.</p>
+<br>
+
+**Disclaimer:** This application is offered to the public as a freely available resource, for non-commercial research use. 
+Some aspects of this experimental module may still be under development, and there are no warranties about the completeness, reliability, accuracy, and security of this software.
+
+-------------------
+
+# Network Construction
+
+## Network Type
+
+You chose a(n) `r input$network_type` network.
+
+```{r plot_sft, echo = FALSE, ,dev = 'svg', fig.width = 27, fig.asp = 1, out.width = '100%'}
+# Render the soft threshold plot
+try(plot_soft_threshold(r_data$sft, powers))
+```
+
+## Compute Network
+You chose the following parameters to compute the network
+```{r parameters, echo = FALSE}
+# summarize network parameter in a table
+tmp <- c()
+rnames <- c("Network Construction Method", "Network type", "Soft Threshold")
+
+if(input$network_type != "unsigned"){
+  rnames <- c(rnames, "TOM type (default)")
+}else{
+  rnames <- c(rnames, "TOM type")
+}
+
+tmp <- c(input$network_construction_method,
+         input$network_type,
+         input$soft_threshold,
+         r_data$tom_type,
+         r_data$man_param$minModuleSize, 
+         r_data$man_param$cutheight, 
+         r_data$man_param$deepSplit)
+
+if(length(r_data$module$merge_diss_it) > 0){
+  tmp <- c(tmp, paste(r_data$module$merge_diss_it, collapse = "; "))
+}else{
+  tmp <- c(tmp, "")
+}
+
+if(input$network_construction_method != "Manual"){
+    rnames <- c(rnames, 
+                "Minimal Module Size (default)", 
+                "Cut Height (default)", 
+                "Dynamic Cut Tree Deep Split (default)", 
+                "Module Eigengene Dissimilarity Threshold (default)")
+}else{
+    rnames <- c(rnames, 
+                "Minimal Module Size", 
+                "Cut Height", 
+                "Dynamic Cut Tree Deep Split", 
+                "Module Eigengene Dissimilarity Threshold")
+}
+
+table <- data.frame(tmp, row.names = rnames)
+colnames(table) <- NULL
+
+DT::datatable(table, options = list(columnDefs = list(list(className = 'dt-left', targets = 1))))
+```
+
+```{r Modules_plots, echo = FALSE, dev = 'svg', fig.width = 27, fig.asp = 0.5, out.width = '100%'} 
+# plot ME dendrogram
+tmp <- tryCatch(r_data$METree, error = function(e){return(NULL)})
+if(!is.null(tmp)){
+  par(mar = c(5.1, 5.1, 4.1, 2.1))
+  plot(r_data$METree,hang = -1,
+       main = "Clustering of module eigengenes",
+       cex = 2,
+       cex.main = 2,
+       cex.axis = 2,
+       cex.lab = 2,
+       cex.sub = 2,
+       xlab = "",
+       sub = "")
+}
+
+# plot gene dendrogram with modules colors
+tmp <- tryCatch(r_data$net$geneTree, error = function(e){return(NULL)})
+if(!is.null(tmp)){
+  tmp2 <- tryCatch(r_data$merge_modules$true_merged, error = function(e){return(NULL)})
+  if(!is.null(tmp2)){
+    if(r_data$merge_modules$true_merged >= 1){
+      color <- cbind(r_data$module_initial$dynamicColors,  
+                    r_data$module_current$moduleColors)
+      gp_lab <- c("Initial Modules", "Merged Modules")
+    }else if (r_data$merge_modules$true_merged == 0 & r_data$merge_modules$initial!= 0){
+      color <- r_data$module_initial$dynamicColors
+      gp_lab <- "Initial Modules"
+    }else{
+      color <- NULL
+      gp_lab <- NULL
+    }
+  }else{
+    color <- NULL
+    gp_lab <- NULL
+  }
+  
+  try(
+    plotDendroAndColors(dendro = r_data$net$geneTree,
+                        colors = color,
+                        groupLabels = gp_lab,
+                        cex.colorLabels = 1,
+                        cex.main = 2,
+                        cex.axis = 1,
+                        cex.lab = 2,
+                        dendroLabels = FALSE,
+                        hang = 0.03,
+                        addGuide = TRUE,
+                        guideHang = 0.05,
+                        abHeight = r_data$man_param$cutheight,
+                        marAll = c(1, 7, 3, 1))
+  )
+}
+
+```
+ 
+## Number of Genes in Each Module
+
+Summary of each module size
+```{r module_size, echo = FALSE}
+# render table with number of genes in each module
+try({
+  tmp <- moduleassignment()$assignment[, ncol(moduleassignment()$assignment)]
+  table <- data.frame("Modules" = unique(tmp), 
+                      "Size" = sapply(X = unique(tmp), FUN = function(x){sum(tmp == x)}))
+  DT::datatable(table, options = list(columnDefs = list(list(className = 'dt-left', targets = 1))))
+})
+```
+
+

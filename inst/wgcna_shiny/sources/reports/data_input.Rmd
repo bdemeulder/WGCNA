@@ -1,0 +1,158 @@
+---
+title: "WGCNAapp report"
+output: html_document
+---
+
+<style type="text/css">
+  h1.title {
+    text-align: center;
+  }
+</style>
+
+--------------------
+
+<p style="float:left;width:50%;">[![etriks](etriks.png){ width=45% }](http://www.etriks.org)
+[![EISBM](EISBM.png){ width=45% }](http://www.eisbm.org) </p>
+
+<p style="display:inline;"> This report is generated from the WGCNAapp developped by the [European Institute for Systems Biology and Medicine](http://www.eisbm.org/) for the [eTRIKS](http://www.etriks.org) project. 
+Contact <bdemeulder@eisbm.org> for any questions.</p>
+<br>
+
+**Disclaimer:** This application is offered to the public as a freely available resource, for non-commercial research use. 
+Some aspects of this experimental module may still be under development, and there are no warranties about the completeness, reliability, accuracy, and security of this software.
+
+-------------------
+
+# Data input
+ 
+You used `r if(input$dataset == 'fml'){ 'the female mice liver'}else if(input$dataset == 'mml'){'the male mice liver'}else if(input$dataset == 'own'){ 'your own'}` dataset.   
+
+The dataset comprises `r nrow(r_data$data$datExpr)` samples, `r ncol(r_data$data$datExpr)` genes and `r ncol(r_data$data$datTraits)` clinical traits.
+
+## Preprocessing
+`r if(input$dataset != 'own'){'Datasets were already processed'}`
+
+```{r preprocess_inputs, echo = FALSE}
+# Make table of preprocess input values
+try(
+if( input$dataset == 'own'){
+  tmp <- data.frame('Parameter' = c(input$missing, input$normalisation, input$categories), 
+                    row.names = c('Missing Data', 'Normalisation', 'Binarise'))
+  DT::datatable(data = tmp, options = list(columnDefs = list(list(className = 'dt-left', targets = 1))))
+}
+)
+```
+
+## Table of Gene Expression (`r min(ncol(r_data$data$datExpr),100)` first genes)
+```{r data_input_table_gene, echo = FALSE}
+# Render gene data table 
+tryCatch({
+  tmp <- data.frame('Subject' = row.names(r_data$data$datExpr), 
+                    r_data$data$datExpr[, 1:min(100,ncol(r_data$data$datExpr))])
+  DT::datatable(data = tmp,
+                extensions = list(ColReorder = NULL, FixedColumns = NULL), 
+                options = list(pageLength = 5, 
+                               dom = 'R<"clear">lftipr',
+                               scrollX = '100%', 
+                               scrollY = '300px', 
+                               scrollCollapse = TRUE,
+                               autoWidth = FALSE, 
+                               processing = FALSE
+                               ),
+                rownames=FALSE)
+}, error = function(e){})
+```
+
+## Table of Clinical Traits
+```{r data_input_table_clinical, echo = FALSE}
+# Render clinical data table
+tryCatch({
+  tmp <- data.frame('Subject' = row.names(r_data$data$datTraits), 
+                    r_data$data$datTraits)
+  DT::datatable(data = tmp,
+                extensions = list(ColReorder = NULL, FixedColumns = NULL), 
+                options = list(pageLength = 5, 
+                               dom = 'R<"clear">lfrtip',
+                               scrollX = '100%', 
+                               scrollY = '300px', 
+                               scrollCollapse = TRUE,
+                               autoWidth = FALSE, 
+                               processing = FALSE),
+                rownames=FALSE)
+}, error = function(e){})
+```
+
+## Sample Dendrogram and Trait Heatmap
+```{r data_input_sample_trait_dendrogram, echo = FALSE, dev = 'svg', fig.width = 27, fig.asp = 0.5, out.width = '100%'}
+# Render Sample Dendrogram plot
+try({ 
+  # calculte correct size for the label depending on the number of subjects
+  cex.text <- min(118 / nrow(r_data$data$datExpr), 2) 
+  # make the plot
+  plotDendroAndColors(autoColorHeight = TRUE, 
+                      dendro = r_data$sampleTree,
+                      colors =  r_data$traitColors$col, 
+                      groupLabels = r_data$traitColors$labels, 
+                      main = "Sample Dendrogram and Trait Heatmap", 
+                      marAll = c(1,6,3,1),
+                      cex.dendroLabels = cex.text,
+                      cex.colorLabels = cex.text,
+                      cex.main = 2.4)
+})
+```
+
+```{r pca, echo = FALSE}
+# Calculate pca
+pc <- tryCatch({ prcomp(r_data$data$datExpr)},error=function(e){NULL})
+
+try({
+  if(!is.null(pc)){
+    # calculate variance according to each pc
+    var <- pc$sdev^2 / sum(pc$sdev^2)
+    if(!is.null(r_data$data$datTraits)){
+	req(input$pca_col)
+	data<-data.frame(pc$x, r_data$data$datTraits)
+	p<- plot_ly(data=data, 
+				x= ~PC1, 
+				y=~PC2, 
+				z=~PC3, 
+				text=row.names(r_data$data$datExpr),
+				type="scatter3d",
+				mode="markers",
+				hoverinfo="text",
+				marker=list(size= 3,
+							line=list(width = 0.5),
+							colorbar = list(title = input$pca_col))
+							,
+				color= ~get(input$pca_col),
+				projection = list(y= list(opacity = 0.1, show = TRUE),
+									x = list(opacity = 0.1, show = TRUE),
+									z = list(opacity = 0.1, show = TRUE)))
+	}else{
+		p <-plot_ly(data = data.frame(pc$x),
+					x = ~PC1,
+					y = ~PC2,
+					z = ~PC3,
+					text = row.names(r_data$data$datExpr),
+                   type = "scatter3d",
+                   mode = "markers",
+                   hoverinfo = "text",
+                   marker = list(size = 3, line = list(width = 0.5)),
+                   projection = list(y = list(opacity = 0.1, show = TRUE),
+                                     x = list(opacity = 0.1, show = TRUE),
+                                     z = list(opacity = 0.1, show = TRUE)))
+    }
+    
+    # layout plotly
+    p <- p %>% layout(title = 'Samples PCA', 
+                      scene = list(aspectmode = "cube", 
+                                   xaxis = list(title = paste("PC1 (", round(var[1] * 100, 2), "%)", sep = "")),
+                                   yaxis = list(title = paste("PC2 (", round(var[2] * 100, 2), "%)", sep = "")), 
+                                   zaxis = list(title = paste("PC3 (", round(var[3] * 100, 2) ,"%)", sep = ""))),
+                      legend = list(x = 0.8))
+    p <- p %>% config(modeBarButtonsToRemove = list('sendDataToCloud', 'toImage'))
+    # Render plotly
+    p
+  }
+})
+```
